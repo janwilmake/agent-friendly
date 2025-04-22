@@ -13,5 +13,6 @@
       "binding": "CHECKERS_KV",
       "id": "5c61f81d57894ba8918e951b35102e1b"
     }
-  ]
+  ],
+  "crons": ["0 0 * * *"]
 }
