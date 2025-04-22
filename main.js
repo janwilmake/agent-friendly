@@ -84,6 +84,10 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    if (url.pathname === "/temp") {
+      await runExampleChecks(env);
+      return new Response("DONE");
+    }
     // Handle the example-check endpoint to retrieve aggregated results from KV
     if (url.pathname === "/example-check") {
       try {
@@ -181,62 +185,68 @@ export default {
     if (event.cron !== "0 0 * * *") {
       return;
     }
-
-    console.log("Starting scheduled example checks");
-
-    // Process all examples
-    const results = {
-      timestamp: new Date().toISOString(),
-      examples: [],
-    };
-
-    // Process examples in batches to avoid overloading
-    const BATCH_SIZE = 3; // Process 3 at a time to stay within CPU limits
-
-    for (let i = 0; i < EXAMPLES.length; i += BATCH_SIZE) {
-      const batch = EXAMPLES.slice(i, i + BATCH_SIZE);
-
-      // Process this batch in parallel
-      const batchResults = await Promise.all(
-        batch.map(async (example) => {
-          try {
-            const targetUrl = new URL(example.url);
-            const checkResult = await checkUrl(targetUrl);
-
-            return {
-              title: example.title,
-              url: example.url,
-              result: checkResult,
-            };
-          } catch (error) {
-            return {
-              title: example.title,
-              url: example.url,
-              error: error.message,
-            };
-          }
-        }),
-      );
-
-      // Add batch results to the collection
-      // @ts-ignore
-      results.examples.push(...batchResults);
-
-      // Small pause between batches to avoid rate limiting
-      if (i + BATCH_SIZE < EXAMPLES.length) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
-
-    // Store results in KV
-    await env.CHECKERS_KV.put(EXAMPLE_RESULTS_KEY, JSON.stringify(results));
-
-    console.log(
-      `Completed example checks. Processed ${results.examples.length} URLs.`,
-    );
+    await runExampleChecks(env);
   },
 };
 
+/**
+ *
+ * @param {any} env
+ */
+const runExampleChecks = async (env) => {
+  console.log("Starting scheduled example checks");
+
+  // Process all examples
+  const results = {
+    timestamp: new Date().toISOString(),
+    examples: [],
+  };
+
+  // Process examples in batches to avoid overloading
+  const BATCH_SIZE = 3; // Process 3 at a time to stay within CPU limits
+
+  for (let i = 0; i < EXAMPLES.length; i += BATCH_SIZE) {
+    const batch = EXAMPLES.slice(i, i + BATCH_SIZE);
+
+    // Process this batch in parallel
+    const batchResults = await Promise.all(
+      batch.map(async (example) => {
+        try {
+          const targetUrl = new URL(example.url);
+          const checkResult = await checkUrl(targetUrl);
+
+          return {
+            title: example.title,
+            url: example.url,
+            result: checkResult,
+          };
+        } catch (error) {
+          return {
+            title: example.title,
+            url: example.url,
+            error: error.message,
+          };
+        }
+      }),
+    );
+
+    // Add batch results to the collection
+    // @ts-ignore
+    results.examples.push(...batchResults);
+
+    // Small pause between batches to avoid rate limiting
+    if (i + BATCH_SIZE < EXAMPLES.length) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+
+  // Store results in KV
+  await env.CHECKERS_KV.put(EXAMPLE_RESULTS_KEY, JSON.stringify(results));
+
+  console.log(
+    `Completed example checks. Processed ${results.examples.length} URLs.`,
+  );
+};
 /**
  * Check a URL for User-Agent Router pattern implementation
  * @param {URL} targetUrl - The URL to check
