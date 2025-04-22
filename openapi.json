@@ -1,0 +1,294 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "User-Agent Router Checker API",
+    "description": "API for checking websites' implementation of User-Agent Router pattern and content negotiation capabilities",
+    "version": "1.0.0",
+
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://agent-friendly.com",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/check/{encodedUrl}": {
+      "get": {
+        "summary": "Check URL for User-Agent Router pattern",
+        "description": "Analyzes a given URL for implementation of the User-Agent Router pattern by testing content negotiation through extensions, Accept headers, and User-Agent headers. Also checks for proper Vary header usage and OpenAPI documentation.",
+        "operationId": "checkUrl",
+        "parameters": [
+          {
+            "name": "encodedUrl",
+            "in": "path",
+            "description": "URL-encoded target URL to check (without the protocol prefix)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "example.com%2Fdocs"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful URL check",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid URL format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/example-check": {
+      "get": {
+        "summary": "Get aggregated results of example URLs",
+        "description": "Returns the latest results from scheduled checks of example URLs stored in KV.",
+        "operationId": "getExampleChecks",
+        "responses": {
+          "200": {
+            "description": "Successful retrieval of example check results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExampleResults"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Example check results not available yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error retrieving results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CheckResult": {
+        "type": "object",
+        "required": [
+          "targetUrl",
+          "pathWithoutExtension",
+          "extensionTests",
+          "acceptHeaderTests",
+          "userAgentTests",
+          "varyHeaderPresent",
+          "varyAccept",
+          "varyUserAgent",
+          "supportsUserAgentRouting",
+          "hasOpenApi",
+          "summary"
+        ],
+        "properties": {
+          "targetUrl": {
+            "type": "string",
+            "description": "The URL that was checked",
+            "example": "https://example.com/docs"
+          },
+          "pathWithoutExtension": {
+            "type": "string",
+            "description": "The path without any file extension",
+            "example": "/docs"
+          },
+          "extensionTests": {
+            "type": "object",
+            "description": "Results of tests with different file extensions",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/TestResult"
+            }
+          },
+          "acceptHeaderTests": {
+            "type": "object",
+            "description": "Results of tests with different Accept headers",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/TestResult"
+            }
+          },
+          "userAgentTests": {
+            "type": "object",
+            "description": "Results of tests with different User-Agent headers",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/TestResult"
+            }
+          },
+          "varyHeaderPresent": {
+            "type": "boolean",
+            "description": "Whether the server uses a Vary header in any responses",
+            "example": true
+          },
+          "varyAccept": {
+            "type": "boolean",
+            "description": "Whether the server includes 'Accept' in its Vary header",
+            "example": true
+          },
+          "varyUserAgent": {
+            "type": "boolean",
+            "description": "Whether the server includes 'User-Agent' in its Vary header",
+            "example": false
+          },
+          "defaultContentType": {
+            "type": "string",
+            "nullable": true,
+            "description": "The content type returned for default requests",
+            "example": "text/html; charset=utf-8"
+          },
+          "contentTypeVariations": {
+            "type": "object",
+            "description": "Different content types returned based on request variations",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "supportsUserAgentRouting": {
+            "type": "boolean",
+            "description": "Whether the URL appears to implement the User-Agent Router pattern",
+            "example": true
+          },
+          "hasOpenApi": {
+            "type": "boolean",
+            "description": "Whether the site provides OpenAPI documentation",
+            "example": true
+          },
+          "openApiLocation": {
+            "type": "string",
+            "nullable": true,
+            "description": "The location of the OpenAPI documentation if found",
+            "example": "/openapi.json"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Human-readable summary of the check results",
+            "example": "This URL appears to implement User-Agent Router pattern. It responds to different Accept headers. The server correctly uses the Vary header to indicate content negotiation. The site provides OpenAPI documentation at /openapi.json."
+          }
+        }
+      },
+      "TestResult": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "description": "HTTP status code of the response",
+            "example": 200
+          },
+          "contentType": {
+            "type": "string",
+            "nullable": true,
+            "description": "Content-Type header of the response",
+            "example": "text/html; charset=utf-8"
+          },
+          "varyHeader": {
+            "type": "string",
+            "nullable": true,
+            "description": "Vary header of the response",
+            "example": "Accept, User-Agent"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true,
+            "description": "Error message if request failed",
+            "example": "request timeout"
+          }
+        }
+      },
+      "ExampleResults": {
+        "type": "object",
+        "required": ["timestamp", "examples"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the example checks were performed",
+            "example": "2025-04-22T00:01:23.456Z"
+          },
+          "examples": {
+            "type": "array",
+            "description": "Results for each example URL",
+            "items": {
+              "type": "object",
+              "required": ["title", "url"],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Title of the example website",
+                  "example": "GitHub Docs"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "URL of the example website",
+                  "example": "https://docs.github.com"
+                },
+                "result": {
+                  "$ref": "#/components/schemas/CheckResult"
+                },
+                "error": {
+                  "type": "string",
+                  "nullable": true,
+                  "description": "Error message if check failed",
+                  "example": "request timeout"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Invalid URL format. Please provide a properly encoded URL."
+          },
+          "details": {
+            "type": "string",
+            "description": "Additional error details",
+            "example": "Failed to retrieve example check results: KV access denied"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "URL Checking",
+      "description": "Endpoints for checking URL implementations"
+    }
+  ]
+}
