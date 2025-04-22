@@ -1,5 +1,7 @@
 # Agent-Friendly Website Checker
 
+[![janwilmake/agent-friendly context](https://badge.forgithub.com/janwilmake/agent-friendly)](https://uithub.com/janwilmake/agent-friendly)
+
 Welcome to the Agent-Friendly Website Checker. This service helps humans and AI agents evaluate websites for agent-friendly implementation patterns.
 
 ## Navigation Links

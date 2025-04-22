@@ -5,6 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent-Friendly Checker</title>
+
+    <meta name="description" content="Agents Are Here. Better Be Nice.
+Make Your Apps/Websites Agent-Friendly" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Facebook Meta Tags -->
+    <meta property="og:url" content="https://agent-friendly.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Agent-Friendly Checker" />
+    <meta property="og:description" content="Agents Are Here. Better Be Nice.
+Make Your Apps/Websites Agent-Friendly" />
+    <meta property="og:image" content="https://quickog.com/screenshot/agent-friendly.com" />
+    <meta property="og:image:alt" content="Agents Are Here. Better Be Nice.
+Make Your Apps/Websites Agent-Friendly" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:domain" content="agent-friendly.com" />
+    <meta property="twitter:url" content="https://agent-friendly.com" />
+    <meta name="twitter:title" content="Agent-Friendly Checker" />
+    <meta name="twitter:description" content="Agents Are Here. Better Be Nice.
+Make Your Apps/Websites Agent-Friendly" />
+    <meta name="twitter:image" content="https://quickog.com/screenshot/agent-friendly.com" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -234,8 +260,7 @@
 
                 // Extract hostname and path from URL
                 let parsedUrl = new URL(url);
-                const targetUrl = parsedUrl.host + parsedUrl.pathname + parsedUrl.search;
-                const encodedUrl = encodeURIComponent(targetUrl);
+                const encodedUrl = encodeURIComponent(url);
 
                 const response = await fetch(`${API_BASE_URL}/check/${encodedUrl}`);
 

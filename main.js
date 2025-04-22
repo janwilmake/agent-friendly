@@ -77,16 +77,26 @@ export default {
   /**
    * Cloudflare Worker handler function
    * @param {Request} request - The incoming request
-   * @param {{ CHECKERS_KV: KVNamespace, DORM: DurableObjectNamespace }} env - Environment variables and bindings
+   * @param {{ CHECKERS_KV: KVNamespace, CREDENTIALS: string }} env - Environment variables and bindings
    * @param {ExecutionContext} ctx - Execution context
    * @returns {Promise<Response>} - The response to the request
    */
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/temp") {
-      await runExampleChecks(env);
-      return new Response("DONE");
+    if (url.pathname === "/trigger") {
+      if (
+        request.headers.get("Authorization")?.slice("Basic ".length) ===
+        btoa(env.CREDENTIALS)
+      ) {
+        await runExampleChecks(env);
+        return new Response("DONE");
+      } else {
+        return new Response("Unauthenticated", {
+          status: 401,
+          headers: { "WWW-Authenticate": "Basic realm='protected'" },
+        });
+      }
     }
     // Handle the example-check endpoint to retrieve aggregated results from KV
     if (url.pathname === "/example-check") {
