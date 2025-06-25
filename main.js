@@ -8,8 +8,8 @@ Building the web for AI agents and humans alike
 ## Core Principles
 
 ✓ Vary on accept header or explicit extension, markdown by default  
-✓ Programmatic auth (with simplerauth)  
-✓ Agent-friendly monetisation (L402)  
+✓ Programmatic Auth (MCP-compliant OAuth Client-Provider)
+✓ Agent-Friendly Payments
 
 [Read more →](https://github.com/janwilmake/agent-friendly)
 
