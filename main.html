@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent-Friendly Web</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+            background-color: #0d1117;
+            color: #e6edf3;
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #58a6ff;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-button {
+            color: #f0f6fc;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .header-button:hover {
+            background-color: #21262d;
+            border-color: #58a6ff;
+        }
+
+        .header-button.agent {
+            background-color: #238636;
+            border-color: #238636;
+            color: #fff;
+        }
+
+        .header-button.agent:hover {
+            background-color: #2ea043;
+            border-color: #2ea043;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .left-section {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #f0f6fc;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: #8b949e;
+            margin-bottom: 30px;
+        }
+
+        .principles {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 24px;
+        }
+
+        .principles h3 {
+            color: #58a6ff;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .principle-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #e6edf3;
+        }
+
+        .principle-item::before {
+            content: "✓";
+            color: #238636;
+            margin-right: 12px;
+            font-weight: bold;
+        }
+
+        .read-more {
+            color: #58a6ff;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 16px;
+            display: inline-block;
+            transition: color 0.2s;
+        }
+
+        .read-more:hover {
+            color: #79c0ff;
+        }
+
+        /* Right Section - Replacements */
+        .replacements {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .replacements h3 {
+            color: #58a6ff;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .replacement-item {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .replacement-item:hover {
+            border-color: #58a6ff;
+            transform: translateY(-2px);
+        }
+
+        .replacement-available {
+            cursor: pointer;
+        }
+
+        .replacement-available:hover {
+            background-color: #1c2128;
+        }
+
+        .replacement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .original {
+            font-size: 16px;
+            color: #8b949e;
+        }
+
+        .replacement {
+            font-size: 18px;
+            font-weight: bold;
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        .replacement:hover {
+            color: #79c0ff;
+        }
+
+        .status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        .status.available {
+            background-color: #238636;
+            color: #fff;
+        }
+
+        .status.coming-soon {
+            background-color: #6f42c1;
+            color: #fff;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+                overflow-y: auto;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            body {
+                overflow: auto;
+            }
+
+            .header {
+                margin-bottom: 30px;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+
+            .header-buttons {
+                gap: 8px;
+            }
+
+            .header-button {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .title {
+                font-size: 36px;
+            }
+
+            .subtitle {
+                font-size: 18px;
+            }
+
+            .principles,
+            .replacement-item {
+                padding: 16px;
+            }
+
+            .principle-item {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .title {
+                font-size: 28px;
+            }
+
+            .subtitle {
+                font-size: 16px;
+            }
+
+            .replacement-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">agent-friendly.com</div>
+            <div class="header-buttons">
+                <a href="/index.md" class="header-button agent">View for Agent</a>
+                <a href="https://github.com/janwilmake/agent-friendly" class="header-button">View on GitHub</a>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="left-section">
+                <div>
+                    <h1 class="title">Agent-Friendly Web</h1>
+                    <p class="subtitle">Building the web for AI agents and humans alike</p>
+                </div>
+
+                <div class="principles">
+                    <h3>Core Principles</h3>
+                    <div class="principle-item">
+                        Vary on accept header or explicit extension, markdown by default
+                    </div>
+                    <div class="principle-item">
+                        Programmatic auth (with simplerauth)
+                    </div>
+                    <div class="principle-item">
+                        Agent-friendly monetisation (L402)
+                    </div>
+                    <a href="https://github.com/janwilmake/agent-friendly" class="read-more">Read more →</a>
+                </div>
+            </div>
+
+            <div class="replacements">
+                <h3>Agent-Friendly Replacements</h3>
+
+                <div class="replacement-item replacement-available"
+                    onclick="window.open('https://googllm.com', '_blank')">
+                    <div class="replacement-header">
+                        <div>
+                            <div class="original">Google →</div>
+                            <a href="https://googllm.com" class="replacement">GoogLLM.com</a>
+                        </div>
+                        <span class="status available">Available</span>
+                    </div>
+                </div>
+
+                <div class="replacement-item replacement-available"
+                    onclick="window.open('https://markdownfeed.com', '_blank')">
+                    <div class="replacement-header">
+                        <div>
+                            <div class="original">X/Twitter →</div>
+                            <a href="https://markdownfeed.com" class="replacement">MarkdownFeed.com</a>
+                        </div>
+                        <span class="status available">Available</span>
+                    </div>
+                </div>
+
+                <div class="replacement-item">
+                    <div class="replacement-header">
+                        <div>
+                            <div class="original">Y Combinator →</div>
+                            <div class="replacement">Coming Soon</div>
+                        </div>
+                        <span class="status coming-soon">Coming Soon</span>
+                    </div>
+                </div>
+
+                <div class="replacement-item">
+                    <div class="replacement-header">
+                        <div>
+                            <div class="original">GitHub →</div>
+                            <div class="replacement">Coming Soon</div>
+                        </div>
+                        <span class="status coming-soon">Coming Soon</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

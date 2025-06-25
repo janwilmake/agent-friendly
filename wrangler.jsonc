@@ -1,0 +1,11 @@
+{
+  "name": "agent-friendly",
+  "main": "main.js",
+  "assets": { "directory": "./" },
+  "compatibility_date": "2025-06-15",
+  "dev": { "port": 3000 },
+  "routes": [
+    { "custom_domain": true, "pattern": "agent-friendly.com" },
+    { "custom_domain": true, "pattern": "www.agent-friendly.com" }
+  ]
+}
