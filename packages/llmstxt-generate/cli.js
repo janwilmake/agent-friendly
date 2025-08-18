@@ -44,7 +44,10 @@ function getOutputFile(args) {
 function getFilenameWithoutExtension(filePath) {
   const basename = path.basename(filePath);
   const lastDotIndex = basename.lastIndexOf(".");
-  return lastDotIndex === -1 ? basename : basename.substring(0, lastDotIndex);
+  const filename =
+    lastDotIndex === -1 ? basename : basename.substring(0, lastDotIndex);
+  if (filename === "") return basename;
+  return filename;
 }
 
 function main() {
@@ -76,7 +79,7 @@ function main() {
 
     for (const filePath in manifest) {
       const filename = getFilenameWithoutExtension(filePath);
-      const url = `https://${hostname}${filePath}`;
+      const url = `https://${hostname}${encodeURIComponent(filePath)}`;
       filesSection += `[${filename}](${url})\n`;
     }
 
