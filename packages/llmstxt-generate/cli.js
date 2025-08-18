@@ -79,7 +79,7 @@ function main() {
 
     for (const filePath in manifest) {
       const filename = getFilenameWithoutExtension(filePath);
-      const url = `https://${hostname}${encodeURIComponent(filePath)}`;
+      const url = `https://${hostname}${filePath}`;
       filesSection += `[${filename}](${url})\n`;
     }
 
