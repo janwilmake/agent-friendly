@@ -8,17 +8,5 @@
 Use alternate convention:
 
 ```html
-<html>
-  <head>
-    <link
-      rel="alternate"
-      type="text/plain"
-      href="document.txt"
-      title="Plain Text"
-    />
-  </head>
-  <body>
-    my site
-  </body>
-</html>
+<link rel="alternate" type="text/markdown" href="docs.md" title="Docs" />
 ```
