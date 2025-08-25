@@ -2,6 +2,7 @@
 
 - `getassetmanifest` - builds a `manifest.json` file compatible with cloudflare workers
 - `llmstxt-generate` - generates a llms.txt file from your `manifest.json`
+- `agent-friendly` - website
 
 # Principles
 
@@ -13,6 +14,6 @@ Use alternate convention:
 
 Vary on accept header or explicit extension, markdown by default
 
-Programmatic Auth (MCP-compliant OAuth Client-Provider)
+Programmatic Auth (MCP-compliant OAuth Client-Provider) - https://github.com/janwilmake/simplerauth-provider
 
 Agent-Friendly Payments
