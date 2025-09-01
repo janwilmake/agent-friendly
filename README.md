@@ -33,7 +33,7 @@ There isn't one dominant strategy yet to make agents able to pay for your produc
 
 ## Serve an OpenAPI
 
-[The OpenAPI Specification](https://www.openapis.org) allows describing your entire server functionality in a discoverable static file. [Here are some best practices](https://github.com/janwilmake/openapisearch/tree/main/best-practices.md) to creating a great discoverable OpenAPI.
+[The OpenAPI Specification](https://www.openapis.org) allows describing your entire server functionality in a discoverable static file. [Here are some best practices](https://github.com/janwilmake/openapisearch/tree/main/docs/best-practices.md) to creating a great discoverable OpenAPI.
 
 ## Use rel alternate
 
