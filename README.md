@@ -12,7 +12,7 @@
 
 - see https://llmstxt.org
 
-4. Allow any MCP client to let the user authenticate
+4. Allow **any** MCP client to let the user authenticate
 
 - see https://github.com/janwilmake/universal-mcp-oauth
 - see https://github.com/janwilmake/simplerauth-provider
