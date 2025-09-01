@@ -19,7 +19,7 @@
 
 5. Agent-Friendly Payments
 
-6. Host an OpenAPI and link to it from https://yourapexdomain.com/.well-known/openapi
+6. Serve an OpenAPI document publicly, and link to it from https://yourapexdomain.com/.well-known/openapi
 
 # Packages
 
