@@ -2,11 +2,12 @@
 
 [Discuss](https://x.com/janwilmake/status/1931241984645103871)
 
-## Create an `/llms.txt`
+## Serve `llms.txt`
 
 llms.txt is an increasingly adopted standard of navigation for agents.
 
 - See https://llmstxt.org
+- [People are asking](https://github.com/AnswerDotAI/llms-txt/issues/85) this to become well-known but there is currently little movement.
 
 ## Adopt MCP
 
@@ -26,6 +27,12 @@ Allow **any** MCP client to let the user authenticate. If you have protected res
 - test via https://mcp.agent-friendly.com
 - see https://github.com/janwilmake/universal-mcp-oauth
 - see https://github.com/janwilmake/simplerauth-provider
+
+## Inform on different user flows
+
+API calls are often part of a bigger sequence of operations. Besides describing this in documentation and your OpenAPI, there's also the [Arazzo Specification](https://www.openapis.org/arazzo-specification) which allows you to define these sequences in a standardized way.
+
+Besides this, it makes sense to instruct agents on next steps in a sequence in text responses, including in non OK responses that would otherwise be a dead end. This reduces the likelihood that an agent gets stuck, just like you would normally design for when creating a website.
 
 ## Agent-Friendly Payments
 
