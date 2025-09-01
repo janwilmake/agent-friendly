@@ -14,6 +14,7 @@
 
 4. Allow **any** MCP client to let the user authenticate
 
+- test via https://mcp.agent-friendly.com
 - see https://github.com/janwilmake/universal-mcp-oauth
 - see https://github.com/janwilmake/simplerauth-provider
 
