@@ -1,5 +1,7 @@
 # Principles
 
+[Discuss](https://x.com/janwilmake/status/1931241984645103871)
+
 ## Create an `/llms.txt`
 
 llms.txt is an increasingly adopted standard of navigation for agents.
