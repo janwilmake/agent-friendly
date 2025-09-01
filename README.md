@@ -58,7 +58,9 @@ By adding a "text/markdown", "text/plain", or "application/json" representation 
 
 ## Vary on accept header
 
-Browser requests normally have `text/html` at the start of their `accept` header they send when requesting web-pages. Agents don't, yet often recieve the same HTML back on a specific address. By responding with a more machine-friendly representation of the same document if the accept header prioritizes it ([see how this works here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Accept)) we make it easier for agents to retrieve the content they're looking for.
+Browser requests normally have `text/html` at the start of their `accept` header they send when requesting web-pages. Agents don't, yet often recieve the same HTML back on a specific address.
+
+By responding with a more machine-friendly representation of the same document if the accept header prioritizes it ([see how this works here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Accept)) we make it easier for agents to retrieve the content they're looking for.
 
 # Packages
 
