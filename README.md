@@ -18,7 +18,7 @@ See https://modelcontextprotocol.io for more info.
 For discoverability, there is no defined standard yet, but there are several competing ideas, which you could already adopt:
 
 - [/.well-known/mcp.json](https://github.com/modelcontextprotocol/modelcontextprotocol/discussions/1147)
-- [discovery over DNS](https://github.com/modelcontextprotocol/modelcontextprotocol/discussions/1149)
+- [Discovery over DNS](https://github.com/modelcontextprotocol/modelcontextprotocol/discussions/1149)
 
 ## Adopt MCP-compatible OAuth
 
@@ -32,7 +32,7 @@ Allow **any** MCP client to let the user authenticate. If you have protected res
 
 API calls are often part of a bigger sequence of operations. Besides describing this in documentation and your OpenAPI, there's also the [Arazzo Specification](https://www.openapis.org/arazzo-specification) which allows you to define these sequences in a standardized way.
 
-Besides this, it makes sense to instruct agents on next steps in a sequence in text responses, including in non OK responses that would otherwise be a dead end. This reduces the likelihood that an agent gets stuck, just like you would normally design for when creating a website.
+Besides this, it makes sense to instruct agents on next steps in a sequence in text responses, including in non OK responses that would otherwise be a dead end. This reduces the likelihood that an agent gets stuck, just like you would normally design for when creating a website. This can be done at the REST endpoint level since it also helps programmers. However, some people may prefer this for MCP.
 
 ## Agent-Friendly Payments
 
