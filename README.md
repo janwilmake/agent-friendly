@@ -28,6 +28,10 @@ Allow **any** MCP client to let the user authenticate. If you have protected res
 - see https://github.com/janwilmake/universal-mcp-oauth
 - see https://github.com/janwilmake/simplerauth-provider
 
+## Serve an OpenAPI
+
+[The OpenAPI Specification](https://www.openapis.org) allows describing your entire server functionality in a discoverable static file. [Here are some best practices](https://github.com/janwilmake/openapisearch/tree/main/docs/best-practices.md) to creating a great discoverable OpenAPI.
+
 ## Inform on different user flows
 
 API calls are often part of a bigger sequence of operations. Besides describing this in documentation and your OpenAPI, there's also the [Arazzo Specification](https://www.openapis.org/arazzo-specification) which allows you to define these sequences in a standardized way.
@@ -39,10 +43,6 @@ Besides this, it makes sense to instruct agents on next steps in a sequence in t
 There isn't one dominant strategy yet to make agents able to pay for your products, so I'll create an overview here for competing standards.
 
 - https://www.l402.org
-
-## Serve an OpenAPI
-
-[The OpenAPI Specification](https://www.openapis.org) allows describing your entire server functionality in a discoverable static file. [Here are some best practices](https://github.com/janwilmake/openapisearch/tree/main/docs/best-practices.md) to creating a great discoverable OpenAPI.
 
 ## Use rel alternate
 
