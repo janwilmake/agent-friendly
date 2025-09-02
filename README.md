@@ -2,12 +2,13 @@
 
 [Discuss](https://x.com/janwilmake/status/1931241984645103871)
 
-## Serve `llms.txt`
+## Serve `llms.txt` or sitemap
 
 llms.txt is an increasingly adopted standard of navigation for agents.
 
 - See https://llmstxt.org
 - [People are asking](https://github.com/AnswerDotAI/llms-txt/issues/85) this to become well-known but there is currently little movement.
+- all links in llms.txt or sitemap should be agent-friendly
 
 ## Adopt MCP
 
@@ -61,6 +62,14 @@ By adding a "text/markdown", "text/plain", or "application/json" representation 
 Browser requests normally have `text/html` at the start of their `accept` header they send when requesting web-pages. Agents don't, yet often recieve the same HTML back on a specific address.
 
 By responding with a more machine-friendly representation of the same document if the accept header prioritizes it ([see how this works here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Accept)) we make it easier for agents to retrieve the content they're looking for.
+
+## No captcha for agents
+
+Does NOT serve an 'im not a robot' page
+
+## `robots.txt` should be permissive
+
+If you're blocking robots but allowing humans
 
 # Principles for codebases/libraries/packages
 
