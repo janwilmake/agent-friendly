@@ -1,0 +1,18 @@
+{
+  "name": "agent-friendly",
+  "main": "main.js",
+  "assets": { "directory": "./" },
+  "compatibility_date": "2024-04-15",
+  "dev": { "port": 3000 },
+  "routes": [
+    { "custom_domain": true, "pattern": "agent-friendly.com" },
+    { "custom_domain": true, "pattern": "www.agent-friendly.com" }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CHECKERS_KV",
+      "id": "5c61f81d57894ba8918e951b35102e1b"
+    }
+  ],
+  "triggers": { "crons": ["0 0 * * *"] }
+}

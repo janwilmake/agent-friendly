@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent-Friendly Checker</title>
+
+    <meta name="description" content="Agents Are Here. Better Be Nice.
+Make Your Apps/Websites Agent-Friendly" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Facebook Meta Tags -->
+    <meta property="og:url" content="https://agent-friendly.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Agent-Friendly Checker" />
+    <meta property="og:description" content="Agents Are Here. Better Be Nice.
+Make Your Apps/Websites Agent-Friendly" />
+    <meta property="og:image" content="https://quickog.com/screenshot/agent-friendly.com" />
+    <meta property="og:image:alt" content="Agents Are Here. Better Be Nice.
+Make Your Apps/Websites Agent-Friendly" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:domain" content="agent-friendly.com" />
+    <meta property="twitter:url" content="https://agent-friendly.com" />
+    <meta name="twitter:title" content="Agent-Friendly Checker" />
+    <meta name="twitter:description" content="Agents Are Here. Better Be Nice.
+Make Your Apps/Websites Agent-Friendly" />
+    <meta name="twitter:image" content="https://quickog.com/screenshot/agent-friendly.com" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cf-orange': '#f6821f',
+                        'cf-orange-dark': '#e67613'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .headline {
+            font-size: 80px;
+            line-height: 1;
+        }
+
+        @media (max-width: 768px) {
+            .headline {
+                font-size: 48px;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-white min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <header class="text-center mb-16">
+            <h1 class="headline font-bold text-cf-orange mb-4">
+                Agents Are Here. Better Be Nice.
+            </h1>
+            <h2 class="text-3xl font-semibold text-gray-800">
+                Make Your Apps/Websites Agent-Friendly
+            </h2>
+        </header>
+
+        <div class="bg-gray-50 shadow-lg rounded-lg p-6 mb-12">
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800">Check Your Website</h3>
+
+            <form id="checkForm" class="mb-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-grow">
+                        <label for="url" class="block text-sm font-medium text-gray-700 mb-1">Website URL</label>
+                        <input type="url" id="url" name="url" placeholder="https://example.com" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-cf-orange focus:border-cf-orange">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit"
+                            class="w-full md:w-auto px-6 py-3 bg-cf-orange hover:bg-cf-orange-dark text-white font-medium rounded-md transition-colors duration-300 flex items-center justify-center">
+                            <span>Check Now</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="checkResult" class="hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-xl font-semibold text-gray-800">Results for <span id="resultUrl"
+                            class="text-cf-orange"></span></h4>
+                    <button id="backToForm" class="text-sm text-cf-orange hover:text-cf-orange-dark font-medium">
+                        ← Check another URL
+                    </button>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <div id="resultSummary" class="p-4 mb-4 bg-gray-50 rounded-md"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                        <div class="border border-gray-200 rounded-md overflow-hidden">
+                            <div class="bg-gray-100 px-4 py-2 font-medium">Implementation Details</div>
+                            <div class="p-4">
+                                <div class="flex justify-between py-2 border-b">
+                                    <span class="text-gray-600">User-Agent Routing</span>
+                                    <span id="userAgentRouting" class="font-medium"></span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b">
+                                    <span class="text-gray-600">OpenAPI Documentation</span>
+                                    <span id="openApiDocs" class="font-medium"></span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b">
+                                    <span class="text-gray-600">Vary Header Present</span>
+                                    <span id="varyHeaderPresent" class="font-medium"></span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b">
+                                    <span class="text-gray-600">Vary: Accept</span>
+                                    <span id="varyAccept" class="font-medium"></span>
+                                </div>
+                                <div class="flex justify-between py-2">
+                                    <span class="text-gray-600">Vary: User-Agent</span>
+                                    <span id="varyUserAgent" class="font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-md overflow-hidden">
+                            <div class="bg-gray-100 px-4 py-2 font-medium">Content Types</div>
+                            <div class="p-4">
+                                <div class="flex justify-between py-2 border-b">
+                                    <span class="text-gray-600">Default Content Type</span>
+                                    <span id="defaultContentType" class="font-medium"></span>
+                                </div>
+                                <div id="contentTypeVariations" class="mt-2">
+                                    <!-- Dynamically populated -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="border border-gray-200 rounded-md overflow-hidden">
+                            <div class="bg-gray-100 px-4 py-2 font-medium">Extension Tests</div>
+                            <div id="extensionTests" class="p-4">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-md overflow-hidden">
+                            <div class="bg-gray-100 px-4 py-2 font-medium">Accept Header Tests</div>
+                            <div id="acceptHeaderTests" class="p-4">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-md overflow-hidden">
+                            <div class="bg-gray-100 px-4 py-2 font-medium">User-Agent Tests</div>
+                            <div id="userAgentTests" class="p-4">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loader" class="hidden flex justify-center items-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cf-orange"></div>
+            </div>
+
+            <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            </div>
+        </div>
+
+        <div class="mb-16">
+            <h3 class="text-2xl font-semibold mb-6 text-gray-800">Example Websites</h3>
+            <div id="exampleLoader" class="flex justify-center items-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cf-orange"></div>
+            </div>
+            <div id="exampleError" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            </div>
+            <div id="examplesTable" class="hidden overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-200 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Website</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">URL</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">User-Agent Routing</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">OpenAPI Docs</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Vary Headers</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="examplesTableBody">
+                        <!-- Dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer class="text-center text-gray-600 text-sm">
+            <p class="mb-2">
+                Created by <a href="https://openapisearch.com"
+                    class="text-cf-orange hover:underline">openapisearch.com</a> and
+                <a href="https://x.com/janwilmake" class="text-cf-orange hover:underline">@janwilmake</a>
+            </p>
+            <p>
+                Built using Cloudflare |
+                <a href="https://github.com/janwilmake/agent-friendly" class="text-cf-orange hover:underline">Open
+                    Source on GitHub</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        const API_BASE_URL = '';
+
+        // Elements
+        const checkForm = document.getElementById('checkForm');
+        const checkResult = document.getElementById('checkResult');
+        const loader = document.getElementById('loader');
+        const errorMessage = document.getElementById('errorMessage');
+        const backToForm = document.getElementById('backToForm');
+        const examplesTable = document.getElementById('examplesTable');
+        const examplesTableBody = document.getElementById('examplesTableBody');
+        const exampleLoader = document.getElementById('exampleLoader');
+        const exampleError = document.getElementById('exampleError');
+
+        // Load example data
+        fetchExamples();
+
+        // Event listeners
+        checkForm.addEventListener('submit', handleFormSubmit);
+        backToForm.addEventListener('click', resetForm);
+
+        // Functions
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const urlInput = document.getElementById('url');
+            const url = urlInput.value.trim();
+
+            if (!url) return;
+
+            try {
+                showLoader();
+                hideError();
+
+                // Extract hostname and path from URL
+                let parsedUrl = new URL(url);
+                const encodedUrl = encodeURIComponent(url);
+
+                const response = await fetch(`${API_BASE_URL}/check/${encodedUrl}`);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to check URL');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                showError(error.message || 'An unexpected error occurred');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function displayResults(data) {
+            // Set URL
+            document.getElementById('resultUrl').textContent = data.targetUrl;
+
+            // Set summary
+            document.getElementById('resultSummary').textContent = data.summary;
+
+            // Set implementation details
+            document.getElementById('userAgentRouting').textContent = formatBoolean(data.supportsUserAgentRouting);
+            document.getElementById('userAgentRouting').className = `font-medium ${data.supportsUserAgentRouting ? 'text-green-600' : 'text-red-600'}`;
+
+            document.getElementById('openApiDocs').textContent = formatBoolean(data.hasOpenApi);
+            document.getElementById('openApiDocs').className = `font-medium ${data.hasOpenApi ? 'text-green-600' : 'text-red-600'}`;
+
+            document.getElementById('varyHeaderPresent').textContent = formatBoolean(data.varyHeaderPresent);
+            document.getElementById('varyHeaderPresent').className = `font-medium ${data.varyHeaderPresent ? 'text-green-600' : 'text-red-600'}`;
+
+            document.getElementById('varyAccept').textContent = formatBoolean(data.varyAccept);
+            document.getElementById('varyAccept').className = `font-medium ${data.varyAccept ? 'text-green-600' : 'text-red-600'}`;
+
+            document.getElementById('varyUserAgent').textContent = formatBoolean(data.varyUserAgent);
+            document.getElementById('varyUserAgent').className = `font-medium ${data.varyUserAgent ? 'text-green-600' : 'text-red-600'}`;
+
+            // Content Types
+            document.getElementById('defaultContentType').textContent = data.defaultContentType || 'N/A';
+
+            const contentTypeVariations = document.getElementById('contentTypeVariations');
+            contentTypeVariations.innerHTML = '';
+
+            if (data.contentTypeVariations && Object.keys(data.contentTypeVariations).length > 0) {
+                Object.entries(data.contentTypeVariations).forEach(([key, value]) => {
+                    const row = document.createElement('div');
+                    row.className = 'flex justify-between py-2 border-b';
+                    row.innerHTML = `
+            <span class="text-gray-600">${key}</span>
+            <span class="font-medium">${value}</span>
+          `;
+                    contentTypeVariations.appendChild(row);
+                });
+            } else {
+                contentTypeVariations.innerHTML = '<p class="text-gray-500 text-sm italic">No content type variations detected</p>';
+            }
+
+            // Extension Tests
+            displayTestResults('extensionTests', data.extensionTests);
+
+            // Accept Header Tests
+            displayTestResults('acceptHeaderTests', data.acceptHeaderTests);
+
+            // User-Agent Tests
+            displayTestResults('userAgentTests', data.userAgentTests);
+
+            // Show results
+            checkForm.classList.add('hidden');
+            checkResult.classList.remove('hidden');
+        }
+
+        function displayTestResults(elementId, tests) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            if (tests && Object.keys(tests).length > 0) {
+                Object.entries(tests).forEach(([key, value]) => {
+                    const statusClass = value.status >= 200 && value.status < 300 ? 'text-green-600' : 'text-red-600';
+
+                    const testRow = document.createElement('div');
+                    testRow.className = 'py-2 border-b';
+                    testRow.innerHTML = `
+            <div class="font-medium mb-1">${key}</div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Status:</span>
+              <span class="${statusClass}">${value.status || 'Error'}</span>
+            </div>
+            ${value.contentType ? `
+            <div class="flex justify-between">
+              <span class="text-gray-600">Content-Type:</span>
+              <span class="text-sm">${value.contentType}</span>
+            </div>
+            ` : ''}
+            ${value.varyHeader ? `
+            <div class="flex justify-between">
+              <span class="text-gray-600">Vary:</span>
+              <span class="text-sm">${value.varyHeader}</span>
+            </div>
+            ` : ''}
+            ${value.error ? `
+            <div class="text-red-600 text-sm mt-1">${value.error}</div>
+            ` : ''}
+          `;
+                    container.appendChild(testRow);
+                });
+            } else {
+                container.innerHTML = '<p class="text-gray-500 text-sm italic">No tests performed</p>';
+            }
+        }
+
+        async function fetchExamples() {
+            try {
+                exampleLoader.classList.remove('hidden');
+                exampleError.classList.add('hidden');
+                examplesTable.classList.add('hidden');
+
+                const response = await fetch(`${API_BASE_URL}/example-check`);
+
+                if (!response.ok) {
+                    throw new Error('Failed to load example data');
+                }
+
+                const data = await response.json();
+                displayExamples(data);
+            } catch (error) {
+                exampleError.textContent = error.message || 'An error occurred while loading examples';
+                exampleError.classList.remove('hidden');
+            } finally {
+                exampleLoader.classList.add('hidden');
+            }
+        }
+
+        function displayExamples(data) {
+            examplesTableBody.innerHTML = '';
+
+            if (data.examples && data.examples.length > 0) {
+                data.examples.forEach(example => {
+                    if (example.error) {
+                        const row = document.createElement('tr');
+                        row.className = 'border-t border-gray-200';
+                        row.innerHTML = `
+              <td class="py-4 px-4">${example.title}</td>
+              <td class="py-4 px-4">${example.url}</td>
+              <td colspan="4" class="py-4 px-4 text-red-600">${example.error}</td>
+            `;
+                        examplesTableBody.appendChild(row);
+                        return;
+                    }
+
+                    const result = example.result;
+
+                    const row = document.createElement('tr');
+                    row.className = 'border-t border-gray-200 hover:bg-gray-50';
+                    row.innerHTML = `
+            <td class="py-4 px-4 font-medium">${example.title}</td>
+            <td class="py-4 px-4">
+              <a href="${example.url}" target="_blank" class="text-cf-orange hover:underline">
+                ${example.url}
+              </a>
+            </td>
+            <td class="py-4 px-4">
+              <span class="${result.supportsUserAgentRouting ? 'text-green-600' : 'text-red-600'}">
+                ${formatBoolean(result.supportsUserAgentRouting)}
+              </span>
+            </td>
+            <td class="py-4 px-4">
+              <span class="${result.hasOpenApi ? 'text-green-600' : 'text-red-600'}">
+                ${formatBoolean(result.hasOpenApi)}
+              </span>
+            </td>
+            <td class="py-4 px-4">
+              <div class="flex gap-2">
+                ${result.varyHeaderPresent ?
+                            `<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Present</span>` :
+                            `<span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Missing</span>`}
+                ${result.varyAccept ?
+                            `<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Accept</span>` : ''}
+                ${result.varyUserAgent ?
+                            `<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">User-Agent</span>` : ''}
+              </div>
+            </td>
+            <td class="py-4 px-4">
+              <button 
+                class="text-cf-orange hover:text-cf-orange-dark text-sm font-medium"
+                onclick="showExampleDetails('${example.url}', ${JSON.stringify(result).replace(/"/g, '&quot;')})">
+                View Details
+              </button>
+            </td>
+          `;
+                    examplesTableBody.appendChild(row);
+                });
+
+                examplesTable.classList.remove('hidden');
+            } else {
+                exampleError.textContent = 'No example data available';
+                exampleError.classList.remove('hidden');
+            }
+        }
+
+        function showExampleDetails(url, result) {
+            // Populate the form with the example URL and trigger check
+            document.getElementById('url').value = url;
+            displayResults(result);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            checkForm.classList.remove('hidden');
+            checkResult.classList.add('hidden');
+            document.getElementById('url').value = '';
+        }
+
+        function showLoader() {
+            loader.classList.remove('hidden');
+            checkForm.classList.add('hidden');
+            checkResult.classList.add('hidden');
+        }
+
+        function hideLoader() {
+            loader.classList.add('hidden');
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+            checkForm.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorMessage.classList.add('hidden');
+        }
+
+        function formatBoolean(value) {
+            return value ? 'Yes' : 'No';
+        }
+
+        // This function is called from the examples table
+        window.showExampleDetails = showExampleDetails;
+    </script>
+</body>
+
+</html>
