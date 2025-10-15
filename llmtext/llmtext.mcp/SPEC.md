@@ -34,18 +34,4 @@ Is X OAuth + a leaderboard good? I think yes, this is great.
   - top total users (https://x.com/username) with total count
   - top MCP servers across users with total usage count
 
-# TODO:
-
-- ✅ Build this out from spec, see if that works out.
-- ✅ Fix CORS issues in `simplerauth-client`
-- ✅ Fix CORS for login.wilmake.com and deploy and publish
-- ✅ test with `npx @modelcontextprotocol/inspector`
-- ✅ Error connecting to LLMs.txt. Please confirm that you have permission to access the service, that you’re using the correct credentials, and that your server handles auth correctly.
-- ✅ Bring simplerauth-client and with-mcp to the packages again
-- CRAZY ONE SHOT, almost got it right! LETS IMPROVE THE withMcp docs to clarify that auth should be in the handler already (show example) https://letmeprompt.com/httpsflaredream-q4xf1v0
-- ❌ Login was successful, but after that, login isnt' found.
-- I'm getting a strange oauth error to the twitter oauth; potentially it has never worked if not directly done at login.wilmake.com and not logged yet!!!
-- Use it for https://docs.parallel.ai/llms.txt and make video about this
-- If it works out, advocate to use this in parallel-cookbook. People without X account can use alternative: https://smithery.ai/server/@jiankaitian/servers
-
-I didn't have enough time for this. Let's speedrun this later, but first, focus on shipping cookbook with https://smithery.ai/server/@jiankaitian/servers
+OUTDATED ^
