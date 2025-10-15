@@ -9,31 +9,30 @@
 - CRAZY ONE SHOT, almost got it right! LETS IMPROVE THE withMcp docs to clarify that auth should be in the handler already (show example) https://letmeprompt.com/httpsflaredream-q4xf1v0
 - ❌ Login was successful, but after that, login isnt' found.
 
-# v2 (october 15, 2025)
+# v2 (October 15, 2025)
 
 - ✅ Hosted at `llmtext.com/{hostname}/mcp`
 - ✅ Very nice landingpage
 - ✅ Made it work with `/{hostname}` and dynamic MCP name / tool
+- ✅ Make X oauth work for cursor/vscode and others! X OAuth is vital for leaderboard, it's not the same without it!
+- ✅ Add daily active developer statistic for hostname.
 
-## Goal 1: Working version with X OAuth, keep X OAuth!
-
-- Make X oauth work for cursor/vscode and others! X OAuth is vital for leaderboard, it's not the same without it!
-- Add daily active developer statistic for hostname.
-- Advocate to parallel that we need X login for daily active developers stats
-- Maybe needed: improve instructions
-
-## Goal 2: Launch and distribute
+# Goal 2: Launch and distribute
 
 - Retrieve MCP servers from one of these: https://llmstxt.site https://github.com/thedaviddias/llms-txt-hub https://directory.llmstxt.cloud into static file, use this to server-render install links to all of these, add search on top.
 - Open issue in https://github.com/AnswerDotAI/llms-txt and reach out to https://x.com/jeremyphoward
 - Use it for https://docs.parallel.ai/llms.txt and make demo
 
-## Nice to have:
+# Nice to have:
 
 - Icon retrieve icon from hostname or apex hostname, pass it into MCP protocol
+- Add favicon and og to website
 - MCP UI protocol: for retrieving urls show token count, for leaderboard make a very nice rendering with carousels
+- Advocate to Parallel that we need X login for daily active developers stats
+- Maybe needed: improve instructions
+- Add ratelimit of requests per user!
 
-## Premium - Slop Guide tool
+# Premium - Slop Guide tool
 
 Create a higher level slopguide tool:
 

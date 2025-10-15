@@ -128,25 +128,6 @@ export default {
   ),
 };
 
-const LEADERBOARD_MD = `# MCP URL Fetcher Leaderboard
-
-Welcome to the MCP URL Fetcher! This service helps you fetch content from URLs and tracks usage statistics.
-
-## How to Install
-
-1. Get your access token from this page after logging in
-2. Install the MCP inspector: \`npx @modelcontextprotocol/inspector\`
-3. Connect to: \`https://llmtext.com/{hostname}/mcp\`
-4. Use the Authorization header: \`Bearer YOUR_ACCESS_TOKEN\`
-
-## Available Tools
-
-- **get**: Fetch content from multiple URLs (returns plain text, warns about HTML)
-- **leaderboard**: View statistics for this MCP server and your usage
-
-## Top Users and Servers shown below...
-`;
-
 async function countTokens(text: string): Promise<number> {
   // Simple token estimation: roughly 5 characters per token
   return Math.ceil(text.length / 5);
@@ -342,7 +323,7 @@ async function handleMcp(
   const llmsTxtData = await fetchLlmsTxt(hostname);
   if (!llmsTxtData) {
     return new Response(
-      "MCP server not found - invalid or inaccessible llms.txt",
+      "MCP server not found - invalid or inaccessible llms.txt. The llms.txt must be available at the root of the domain at https://example.com/llms.txt",
       {
         status: 404,
         headers: corsHeaders,
@@ -745,7 +726,7 @@ async function handleMcp(
           content += `- **Your total tokens**: ${userStatsGlobal.totalTokens}\n`;
           if (userStatsGlobal.mcpHosts.length > 0) {
             content += `- **MCP servers you've used**:\n`;
-            userStatsGlobal.mcpHosts.forEach((host: any) => {
+            userStatsGlobal.mcpHosts?.forEach((host: any) => {
               content += `  - ${host.hostname}: ${host.count} requests\n`;
             });
           }
@@ -845,11 +826,14 @@ async function handleMcp(
 
 export class HistoryDO extends DurableObject<Env> {
   sql: SqlStorage;
+  storage: DurableObjectStorage;
+  private static readonly TRENDS_CACHE_KEY = "activity_trends_cache";
+  private static readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
   constructor(state: DurableObjectState, env: Env) {
     super(state, env);
     this.sql = state.storage.sql;
-
+    this.storage = state.storage;
     // Initialize tables
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS history (
@@ -871,6 +855,7 @@ export class HistoryDO extends DurableObject<Env> {
       CREATE INDEX IF NOT EXISTS idx_hostname ON history(hostname);
       CREATE INDEX IF NOT EXISTS idx_mcp_hostname ON history(mcp_hostname);
       CREATE INDEX IF NOT EXISTS idx_created_at ON history(created_at);
+      CREATE INDEX IF NOT EXISTS idx_username_created ON history(username, created_at);
     `);
   }
 
@@ -998,5 +983,226 @@ export class HistoryDO extends DurableObject<Env> {
       totalRequests: totals?.total_requests || 0,
       totalTokens: totals?.total_tokens || 0,
     };
+  }
+
+  async getActivityTrends(mcpHostname?: string) {
+    const cacheKey = `${HistoryDO.TRENDS_CACHE_KEY}_${mcpHostname || "global"}`;
+
+    // Check if we have cached data
+    const cachedData = await this.storage.get(cacheKey);
+    if (cachedData) {
+      const cache = cachedData as { data: any; timestamp: number };
+      const now = Date.now();
+
+      // Return cached data if it's less than 24 hours old
+      if (now - cache.timestamp < HistoryDO.CACHE_DURATION) {
+        return cache.data;
+      }
+    }
+
+    // Calculate new trends data
+    const trendsData = await this.calculateActivityTrends(mcpHostname);
+
+    // Cache the results
+    await this.storage.put(cacheKey, {
+      data: trendsData,
+      timestamp: Date.now(),
+    });
+
+    return trendsData;
+  }
+
+  private async calculateActivityTrends(mcpHostname?: string) {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const fiftyTwoWeeksAgo = new Date(
+      now.getTime() - 52 * 7 * 24 * 60 * 60 * 1000
+    );
+
+    // Get the earliest record to determine actual start date
+    let earliestQuery = `SELECT MIN(created_at) as earliest FROM history`;
+    const params = [];
+    if (mcpHostname) {
+      earliestQuery += ` WHERE mcp_hostname = ?`;
+      params.push(mcpHostname);
+    }
+
+    const earliestResult = this.sql
+      .exec(earliestQuery, ...params)
+      .toArray()[0] as any;
+    const earliestDate = earliestResult?.earliest
+      ? new Date(earliestResult.earliest)
+      : now;
+
+    // Use the later of fiftyTwoWeeksAgo or earliestDate for weekly trends
+    const weeklyStartDate =
+      earliestDate > fiftyTwoWeeksAgo ? earliestDate : fiftyTwoWeeksAgo;
+    const dailyStartDate =
+      earliestDate > thirtyDaysAgo ? earliestDate : thirtyDaysAgo;
+
+    // Daily trends for last 30 days
+    const dailyTrends = await this.getDailyTrends(
+      dailyStartDate,
+      now,
+      mcpHostname
+    );
+
+    // Weekly trends for last 52 weeks (or since start)
+    const weeklyTrends = await this.getWeeklyTrends(
+      weeklyStartDate,
+      now,
+      mcpHostname
+    );
+
+    return {
+      daily: {
+        period: `${dailyStartDate.toISOString().split("T")[0]} to ${
+          now.toISOString().split("T")[0]
+        }`,
+        trends: dailyTrends,
+      },
+      weekly: {
+        period: `${weeklyStartDate.toISOString().split("T")[0]} to ${
+          now.toISOString().split("T")[0]
+        }`,
+        trends: weeklyTrends,
+      },
+      generatedAt: now.toISOString(),
+      mcpHostname: mcpHostname || "global",
+    };
+  }
+
+  private async getDailyTrends(
+    startDate: Date,
+    endDate: Date,
+    mcpHostname?: string
+  ) {
+    let whereClause = `WHERE DATE(created_at) >= DATE(?) AND DATE(created_at) <= DATE(?)`;
+    const params = [startDate.toISOString(), endDate.toISOString()];
+
+    if (mcpHostname) {
+      whereClause += ` AND mcp_hostname = ?`;
+      params.push(mcpHostname);
+    }
+
+    // Get daily active developer counts
+    const dailyCountsQuery = `
+      SELECT 
+        DATE(created_at) as date,
+        COUNT(DISTINCT username) as active_developers,
+        COUNT(*) as total_requests,
+        SUM(tokens) as total_tokens
+      FROM history 
+      ${whereClause}
+      GROUP BY DATE(created_at)
+      ORDER BY date DESC
+    `;
+
+    const dailyCounts = this.sql.exec(dailyCountsQuery, ...params).toArray();
+
+    // Get top 10 users for each day
+    const dailyTopUsers = [];
+    for (const day of dailyCounts) {
+      let topUsersQuery = `
+        SELECT 
+          username,
+          COUNT(*) as requests,
+          SUM(tokens) as tokens
+        FROM history 
+        WHERE DATE(created_at) = ? ${mcpHostname ? "AND mcp_hostname = ?" : ""}
+        GROUP BY username
+        ORDER BY requests DESC, tokens DESC
+        LIMIT 10
+      `;
+
+      const topUsersParams = [day.date];
+      if (mcpHostname) {
+        topUsersParams.push(mcpHostname);
+      }
+
+      const topUsers = this.sql
+        .exec(topUsersQuery, ...topUsersParams)
+        .toArray();
+
+      dailyTopUsers.push({
+        date: day.date,
+        active_developers: day.active_developers,
+        total_requests: day.total_requests,
+        total_tokens: day.total_tokens,
+        top_developers: topUsers,
+      });
+    }
+
+    return dailyTopUsers;
+  }
+
+  private async getWeeklyTrends(
+    startDate: Date,
+    endDate: Date,
+    mcpHostname?: string
+  ) {
+    let whereClause = `WHERE DATE(created_at) >= DATE(?) AND DATE(created_at) <= DATE(?)`;
+    const params = [startDate.toISOString(), endDate.toISOString()];
+
+    if (mcpHostname) {
+      whereClause += ` AND mcp_hostname = ?`;
+      params.push(mcpHostname);
+    }
+
+    // SQLite doesn't have YEARWEEK, so we'll use strftime to get year and week
+    const weeklyCountsQuery = `
+      SELECT 
+        strftime('%Y-%W', created_at) as year_week,
+        DATE(created_at, 'weekday 0', '-6 days') as week_start,
+        DATE(created_at, 'weekday 0') as week_end,
+        COUNT(DISTINCT username) as active_developers,
+        COUNT(*) as total_requests,
+        SUM(tokens) as total_tokens
+      FROM history 
+      ${whereClause}
+      GROUP BY strftime('%Y-%W', created_at)
+      ORDER BY year_week DESC
+    `;
+
+    const weeklyCounts = this.sql.exec(weeklyCountsQuery, ...params).toArray();
+
+    // Get top 10 users for each week
+    const weeklyTopUsers = [];
+    for (const week of weeklyCounts) {
+      let topUsersQuery = `
+        SELECT 
+          username,
+          COUNT(*) as requests,
+          SUM(tokens) as tokens
+        FROM history 
+        WHERE strftime('%Y-%W', created_at) = ? ${
+          mcpHostname ? "AND mcp_hostname = ?" : ""
+        }
+        GROUP BY username
+        ORDER BY requests DESC, tokens DESC
+        LIMIT 10
+      `;
+
+      const topUsersParams = [week.year_week];
+      if (mcpHostname) {
+        topUsersParams.push(mcpHostname);
+      }
+
+      const topUsers = this.sql
+        .exec(topUsersQuery, ...topUsersParams)
+        .toArray();
+
+      weeklyTopUsers.push({
+        year_week: week.year_week,
+        week_start: week.week_start,
+        week_end: week.week_end,
+        active_developers: week.active_developers,
+        total_requests: week.total_requests,
+        total_tokens: week.total_tokens,
+        top_developers: topUsers,
+      });
+    }
+
+    return weeklyTopUsers;
   }
 }
