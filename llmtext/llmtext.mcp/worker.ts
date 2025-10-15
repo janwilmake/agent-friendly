@@ -1,8 +1,9 @@
 /// <reference types="@cloudflare/workers-types" />
 import { DurableObject } from "cloudflare:workers";
 import { withSimplerAuth, UserContext } from "./simplerauth-client";
-import { withMcp } from "./with-mcp";
-import openapi from "./openapi.json";
+//@ts-ignore
+import html from "./html.html";
+import { convertRestToMcp } from "rest-mcp";
 
 export interface Env {
   HISTORY_DO: DurableObjectNamespace<HistoryDO>;
@@ -80,6 +81,459 @@ async function fetchUrlContent(url: string): Promise<{
     };
   }
 }
+
+async function handleMcp(
+  request: Request,
+  env: Env,
+  ctx: UserContext
+): Promise<Response> {
+  // Handle preflight OPTIONS request
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Authorization, MCP-Protocol-Version",
+        "Access-Control-Max-Age": "86400",
+      },
+    });
+  }
+
+  if (request.method === "GET") {
+    return new Response("Only Streamable HTTP is supported", {
+      status: 405,
+    });
+  }
+
+  if (request.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers":
+      "Content-Type, Authorization, MCP-Protocol-Version",
+  };
+
+  try {
+    const message: any = await request.json();
+
+    console.log({ message, auth: ctx.authenticated });
+    const historyDO = env.HISTORY_DO.get(env.HISTORY_DO.idFromName("history"));
+
+    // Handle ping
+    if (message.method === "ping") {
+      return new Response(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: message.id,
+          result: {},
+        }),
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
+    }
+
+    // Handle initialize
+    if (message.method === "initialize") {
+      if (!ctx.authenticated) {
+        const url = new URL(request.url);
+        const resourceMetadataUrl = `${url.origin}/.well-known/oauth-protected-resource/mcp`;
+
+        return new Response(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id: message.id,
+            error: { code: -32001, message: "Unauthorized" },
+          }),
+          {
+            status: 401,
+            headers: {
+              "Content-Type": "application/json",
+              "WWW-Authenticate": `Bearer realm="main", resource_metadata="${resourceMetadataUrl}"`,
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+
+      const initializeResult = {
+        jsonrpc: "2.0",
+        id: message.id,
+        result: {
+          protocolVersion: "2025-03-26",
+          capabilities: {
+            tools: {},
+          },
+          serverInfo: {
+            name: "llms.txt MCP",
+            version: "1.0.0",
+          },
+          instructions: "Fetch content from URLs and track usage statistics.",
+        },
+      };
+
+      return new Response(JSON.stringify(initializeResult, undefined, 2), {
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // Handle initialized notification
+    if (message.method === "notifications/initialized") {
+      return new Response(null, {
+        status: 202,
+        headers: corsHeaders,
+      });
+    }
+
+    if (message.method === "prompts/list") {
+      return new Response(
+        JSON.stringify(
+          {
+            jsonrpc: "2.0",
+            id: message.id,
+            result: { prompts: [] },
+          },
+          undefined,
+          2
+        ),
+        { headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (message.method === "resources/list") {
+      return new Response(
+        JSON.stringify(
+          {
+            jsonrpc: "2.0",
+            id: message.id,
+            result: { resources: [] },
+          },
+          undefined,
+          2
+        ),
+        { headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (message.method === "resources/read") {
+      const { uri } = message.params;
+      return new Response(
+        JSON.stringify(
+          {
+            jsonrpc: "2.0",
+            id: message.id,
+            error: { code: -32602, message: `Resource not found: ${uri}` },
+          },
+          undefined,
+          2
+        ),
+        { headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle tools/list
+    if (message.method === "tools/list") {
+      if (!ctx.authenticated) {
+        const url = new URL(request.url);
+        const resourceMetadataUrl = `${url.origin}/.well-known/oauth-protected-resource/mcp`;
+
+        return new Response(
+          JSON.stringify(
+            {
+              jsonrpc: "2.0",
+              id: message.id,
+              error: { code: -32001, message: "Unauthorized" },
+            },
+            undefined,
+            2
+          ),
+          {
+            status: 401,
+            headers: {
+              "Content-Type": "application/json",
+              "WWW-Authenticate": `Bearer realm="main", resource_metadata="${resourceMetadataUrl}"`,
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+
+      const tools = [
+        {
+          name: "get",
+          title: "Fetch URL content",
+          description: "Fetch content from any URL and return it as plain text",
+          inputSchema: {
+            type: "object",
+            properties: {
+              url: {
+                type: "string",
+                description: "The URL to fetch content from",
+              },
+            },
+            required: ["url"],
+          },
+        },
+        {
+          name: "usage",
+          title: "Get personal usage statistics",
+          description: "View your personal usage statistics",
+          inputSchema: {
+            type: "object",
+            properties: {},
+          },
+        },
+        {
+          name: "leaderboard",
+          title: "Get leaderboard",
+          description: "View global usage statistics and leaderboard",
+          inputSchema: {
+            type: "object",
+            properties: {
+              hostname: {
+                type: "string",
+                description:
+                  "Optional hostname to filter leaderboard by specific server",
+              },
+            },
+          },
+        },
+      ];
+
+      return new Response(
+        JSON.stringify(
+          {
+            jsonrpc: "2.0",
+            id: message.id,
+            result: { tools },
+          },
+          undefined,
+          2
+        ),
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
+    }
+
+    // Handle tools/call
+    if (message.method === "tools/call") {
+      if (!ctx.authenticated) {
+        const url = new URL(request.url);
+        const resourceMetadataUrl = `${url.origin}/.well-known/oauth-protected-resource/mcp`;
+
+        return new Response(
+          JSON.stringify(
+            {
+              jsonrpc: "2.0",
+              id: message.id,
+              error: { code: -32001, message: "Unauthorized" },
+            },
+            undefined,
+            2
+          ),
+          {
+            status: 401,
+            headers: {
+              "Content-Type": "application/json",
+              "WWW-Authenticate": `Bearer realm="main", resource_metadata="${resourceMetadataUrl}"`,
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+
+      const { name, arguments: args } = message.params as {
+        name: string;
+        arguments: { [key: string]: any } | undefined;
+      };
+
+      try {
+        let result: string = "";
+        let isError = false;
+
+        if (name === "get") {
+          const url = args?.url;
+
+          if (!url) {
+            result = "Error: URL parameter is required";
+            isError = true;
+          } else {
+            try {
+              new URL(url); // Validate URL
+
+              const fetchResult = await fetchUrlContent(url);
+              const hostname = new URL(url).hostname;
+              const isLlmsTxt = url.endsWith("/llms.txt");
+
+              // Store in history
+              await historyDO.addHistory({
+                username: ctx.user!.username,
+                hostname,
+                is_llms_txt: isLlmsTxt,
+                content_type: fetchResult.contentType,
+                url: url,
+                tokens: fetchResult.tokens,
+                response_time: fetchResult.responseTime,
+              });
+
+              // Check if content is non-plaintext or has too many tokens
+              const isPlainText =
+                fetchResult.contentType.includes("text/") ||
+                fetchResult.contentType.includes("application/json") ||
+                fetchResult.contentType === "unknown";
+
+              let warning = "";
+              if (!isPlainText) {
+                warning = `⚠️  Warning: Content-Type is ${fetchResult.contentType}, which may not be plain text. Consider using an HTML-to-Markdown MCP for better results.\n\n`;
+              } else if (fetchResult.tokens > 10000) {
+                warning = `⚠️  Warning: Content is very large (${fetchResult.tokens} tokens). Consider using an HTML-to-Markdown MCP for better processing.\n\n`;
+              }
+
+              result = warning + fetchResult.content;
+            } catch (urlError) {
+              result = "Error: Invalid URL";
+              isError = true;
+            }
+          }
+        } else if (name === "usage") {
+          const stats = await historyDO.getPersonalStats(ctx.user!.username);
+          result = JSON.stringify(stats, null, 2);
+        } else if (name === "leaderboard") {
+          const { hostname } = args || {};
+          const leaderboard = await historyDO.getLeaderboard(hostname);
+
+          let content = hostname
+            ? `Leaderboard for ${hostname}\n${"=".repeat(
+                20 + hostname.length
+              )}\n\n`
+            : `Global Leaderboard\n==================\n\n`;
+
+          content += `Top Users:\n`;
+          leaderboard.users.slice(0, 20).forEach((user: any, i: number) => {
+            content += `${i + 1}. x.com/${user.username}: ${
+              user.total_requests
+            } requests\n`;
+          });
+
+          if (!hostname) {
+            content += `\nTop MCP Servers:\n`;
+            leaderboard.servers
+              .slice(0, 20)
+              .forEach((server: any, i: number) => {
+                content += `${i + 1}. ${server.hostname}: ${
+                  server.total_requests
+                } requests\n`;
+              });
+          }
+
+          result = content;
+        } else {
+          result = `Error: Unknown tool: ${name}`;
+          isError = true;
+        }
+
+        return new Response(
+          JSON.stringify(
+            {
+              jsonrpc: "2.0",
+              id: message.id,
+              result: {
+                content: [{ type: "text", text: result }],
+                isError,
+              },
+            },
+            undefined,
+            2
+          ),
+          {
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
+      } catch (error) {
+        return new Response(
+          JSON.stringify(
+            {
+              jsonrpc: "2.0",
+              id: message.id,
+              result: {
+                content: [
+                  {
+                    type: "text",
+                    text: `Error executing tool: ${error.message}`,
+                  },
+                ],
+                isError: true,
+              },
+            },
+            undefined,
+            2
+          ),
+          {
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+    }
+
+    // Method not found
+    return new Response(
+      JSON.stringify(
+        {
+          jsonrpc: "2.0",
+          id: message.id,
+          error: {
+            code: -32601,
+            message: `Method not found: ${message.method}`,
+          },
+        },
+        undefined,
+        2
+      ),
+      {
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: null,
+        error: { code: -32700, message: "Parse error" },
+      }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+  }
+}
+
 const mainHandler = async (
   request: Request,
   env: Env,
@@ -93,12 +547,15 @@ const mainHandler = async (
   const url = new URL(request.url);
   const path = url.pathname;
 
+  // Handle MCP endpoint
+  if (path === "/mcp") {
+    return handleMcp(request, env, ctx);
+  }
+
   // Get DO instance
   const historyDO = env.HISTORY_DO.get(env.HISTORY_DO.idFromName("history"));
 
   if (path === "/") {
-    const html = await import("./index.html");
-
     if (ctx.authenticated) {
       const stats = await historyDO.getPersonalStats(ctx.user!.username);
       const leaderboard = await historyDO.getLeaderboard(undefined, 10);
@@ -112,7 +569,7 @@ const mainHandler = async (
       };
 
       return new Response(
-        html.default.replace(
+        html.replace(
           "</head>",
           `<script>window.data = ${JSON.stringify(data)}</script></head>`
         ),
@@ -121,7 +578,7 @@ const mainHandler = async (
     } else {
       const data = { leaderboardMd: LEADERBOARD_MD };
       return new Response(
-        html.default.replace(
+        html.replace(
           "</head>",
           `<script>window.data = ${JSON.stringify(data)}</script></head>`
         ),
@@ -162,127 +619,25 @@ const mainHandler = async (
     } else {
       return new Response(
         `MCP URL Fetcher - Please login first at ${url.origin}/`,
-        {
-          headers: { "Content-Type": "text/plain" },
-        }
+        { headers: { "Content-Type": "text/plain" } }
       );
     }
   }
 
-  if (path.startsWith("/get/")) {
-    if (!ctx.authenticated) {
-      const resourceMetadataUrl = `${url.origin}/.well-known/oauth-protected-resource`;
-
-      return new Response("Unauthorized. Please login first", {
-        status: 401,
-        headers: {
-          "WWW-Authenticate": `Bearer realm="main", resource_metadata="${resourceMetadataUrl}"`,
-        },
-      });
+  try {
+    // Handle rest over mcp
+    const mcpRequest = await convertRestToMcp(request);
+    if (!mcpRequest) {
+      return new Response("Method not found", { status: 404 });
     }
-    const targetUrl = decodeURIComponent(path.substring(5));
-
-    try {
-      new URL(targetUrl); // Validate URL
-    } catch {
-      return new Response(JSON.stringify({ error: "Invalid URL" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const result = await fetchUrlContent(targetUrl);
-    const hostname = new URL(targetUrl).hostname;
-    const isLlmsTxt = targetUrl.endsWith("/llms.txt");
-
-    // Store in history
-    await historyDO.addHistory({
-      username: ctx.user!.username,
-      hostname,
-      is_llms_txt: isLlmsTxt,
-      content_type: result.contentType,
-      url: targetUrl,
-      tokens: result.tokens,
-      response_time: result.responseTime,
-    });
-
-    // Check if content is non-plaintext or has too many tokens
-    const isPlainText =
-      result.contentType.includes("text/") ||
-      result.contentType.includes("application/json") ||
-      result.contentType === "unknown";
-
-    let warning = "";
-    if (!isPlainText) {
-      warning = `⚠️  Warning: Content-Type is ${result.contentType}, which may not be plain text. Consider using an HTML-to-Markdown MCP for better results.\n\n`;
-    } else if (result.tokens > 10000) {
-      warning = `⚠️  Warning: Content is very large (${result.tokens} tokens). Consider using an HTML-to-Markdown MCP for better processing.\n\n`;
-    }
-
-    return new Response(warning + result.content, {
-      headers: { "Content-Type": "text/markdown;charset=utf8" },
-    });
+    return handleMcp(mcpRequest, env, ctx);
+  } catch (error) {
+    return new Response(error.message, { status: 400 });
   }
-
-  if (path === "/usage" && ctx.authenticated) {
-    const stats = await historyDO.getPersonalStats(ctx.user!.username);
-    return new Response(JSON.stringify(stats), {
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  if (path === "/leaderboard" || path.startsWith("/leaderboard/")) {
-    const hostname = path.startsWith("/leaderboard/")
-      ? path.substring("/leaderboard/".length)
-      : null;
-
-    const leaderboard = await historyDO.getLeaderboard(hostname);
-
-    let content = hostname
-      ? `Leaderboard for ${hostname}\n${"=".repeat(20 + hostname.length)}\n\n`
-      : `Global Leaderboard\n==================\n\n`;
-
-    content += `Top Users:\n`;
-    leaderboard.users.slice(0, 20).forEach((user: any, i: number) => {
-      content += `${i + 1}. x.com/${user.username}: ${
-        user.total_requests
-      } requests\n`;
-    });
-
-    if (!hostname) {
-      content += `\nTop MCP Servers:\n`;
-      leaderboard.servers.slice(0, 20).forEach((server: any, i: number) => {
-        content += `${i + 1}. ${server.hostname}: ${
-          server.total_requests
-        } requests\n`;
-      });
-    }
-
-    return new Response(content, {
-      headers: {
-        "Content-Type": "text/plain",
-        "Cache-Control": "public, max-age=3600",
-      },
-    });
-  }
-
-  return new Response("Not found", { status: 404 });
 };
 
 export default {
-  fetch: withMcp(
-    withSimplerAuth(mainHandler, { isLoginRequired: false }),
-    openapi,
-    {
-      toolOperationIds: ["get", "usage", "leaderboard"],
-      protocolVersion: "2025-03-26",
-      authEndpoint: "/me",
-      serverInfo: {
-        name: "llms.txt MCP",
-        version: "1.0.0",
-      },
-    }
-  ),
+  fetch: withSimplerAuth(mainHandler, { isLoginRequired: false }),
 };
 
 export class HistoryDO extends DurableObject<Env> {

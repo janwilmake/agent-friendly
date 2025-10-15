@@ -20,6 +20,7 @@ Is X OAuth + a leaderboard good? I think yes, this is great.
 
 # SPEC:
 
+- https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/refs/heads/main/schema/draft/schema.ts
 - Use https://uithub.com/janwilmake/simplerauth-provider
 - Use https://uithub.com/janwilmake/with-mcp
 - https://flaredream.com/system-ts.md
