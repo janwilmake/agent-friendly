@@ -19,6 +19,29 @@ async function fetchWithTimeout(
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
+        // Accept: "text/plain,text/markdown,*/*",
+        // "User-Agent": "llms-txt-filter/1.0",
+      },
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+}
+
+async function fetchMdWithTimeout(
+  url: string,
+  timeoutMs: number = 2000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
         Accept: "text/plain,text/markdown,*/*",
         "User-Agent": "llms-txt-filter/1.0",
       },
@@ -84,7 +107,7 @@ async function validateLinksInContent(
 
   for (const link of linksToTest) {
     try {
-      const response = await fetchWithTimeout(link, 2000);
+      const response = await fetchMdWithTimeout(link, 2000);
 
       if (!response.ok) {
         continue;

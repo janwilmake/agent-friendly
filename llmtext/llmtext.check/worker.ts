@@ -50,7 +50,7 @@ export async function validateLlmsTxt(
       response = await fetch(url.toString(), {
         signal: controller.signal,
         headers: {
-          Accept: "text/plain, text/markdown, */*",
+          // Accept: "text/plain, text/markdown, */*",
         },
       });
       clearTimeout(timeoutId);
